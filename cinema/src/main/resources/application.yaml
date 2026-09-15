@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: cinema
+  datasource:
+    url: "jdbc:sqlite:./db/cinema.db"
+    driver-class-name: org.sqlite.JDBC
+  sql:
+    init:
+      mode: always
+  jpa:
+    properties:
+      hibernate:
+        dialect: "org.hibernate.community.dialect.SQLiteDialect"
