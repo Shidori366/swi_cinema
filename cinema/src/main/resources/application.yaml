@@ -2,7 +2,7 @@ spring:
   application:
     name: cinema
   datasource:
-    url: "jdbc:sqlite:./db/cinema.db"
+    url: "jdbc:sqlite:@project.basedir@/db/cinema.db"
     driver-class-name: org.sqlite.JDBC
   sql:
     init:
