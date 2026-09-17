@@ -2,12 +2,20 @@ spring:
   application:
     name: cinema
   datasource:
-    url: "jdbc:sqlite:./db/cinema.db"
+    url: "jdbc:sqlite:@project.basedir@/db/cinema.db"
     driver-class-name: org.sqlite.JDBC
   sql:
     init:
       mode: always
+      data-locations:
+        - classpath:db/data.sql
   jpa:
+    hibernate:
+      ddl-auto: create-drop
     properties:
       hibernate:
         dialect: "org.hibernate.community.dialect.SQLiteDialect"
+    defer-datasource-initialization: true
+logging:
+  level:
+    org.springframework.jdbc.datasource.init: DEBUG
