@@ -53,3 +53,23 @@ VALUES
 (24, 5),
 (25, 5);
 
+INSERT INTO screening (id, time, movie_id, room_id) VALUES
+    (101, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 1, 1),
+    (102, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 2, 2),
+    (103, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 3, 3),
+    (104, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 1, 4),
+    (105, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 2, 5);
+
+INSERT INTO reservation (id, user_id, screening_id, reservation_status, created_at) VALUES
+    (1, 1, 101, 'RESERVED', datetime('now')),
+    (2, 2, 102, 'PENDING', datetime('now')),
+    (3, 1, 101, 'CANCELLED', datetime('now'));
+
+INSERT INTO payment (id, reservation_id, amount, currency, payment_method, payment_status, created_at) VALUES
+    (1, 1, 350.00, 'CZK', 'CREDIT_CARD', 'COMPLETED', datetime('now')),
+    (2, 2, 500.00, 'CZK', 'CREDIT_CARD', 'PENDING', datetime('now'));
+
+INSERT INTO seat_reservation (reservation_id, seat_id) VALUES
+    (1, 10),
+    (1, 11),
+    (2, 12);

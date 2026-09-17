@@ -19,6 +19,9 @@ public class Movie {
 
     private String director;
 
+    // minutes
+    private Long duration;
+
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Screening> screenings = new ArrayList<>();
 

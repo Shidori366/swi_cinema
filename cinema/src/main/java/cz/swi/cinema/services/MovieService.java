@@ -1,7 +1,9 @@
 package cz.swi.cinema.services;
 
 import cz.swi.cinema.models.Movie;
+import cz.swi.cinema.models.Reservation;
 import cz.swi.cinema.repositories.MovieRepository;
+import cz.swi.cinema.repositories.ReservationRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
