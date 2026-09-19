@@ -22,7 +22,7 @@ public class Screening {
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
-    @OneToOne
+    @ManyToOne
     private Room room;
 
     @OneToMany(mappedBy = "screening", cascade = CascadeType.ALL, orphanRemoval = true)
