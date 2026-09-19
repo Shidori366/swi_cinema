@@ -1,6 +1,6 @@
 package cz.swi.cinema.mappers;
 
-import cz.swi.cinema.dto.ReservationDto;
+import cz.swi.shared.dto.ReservationDto;
 import cz.swi.cinema.models.Reservation;
 import cz.swi.cinema.models.Seat;
 import org.mapstruct.Mapper;

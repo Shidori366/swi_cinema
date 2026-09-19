@@ -1,4 +1,4 @@
-package cz.swi.cinema.dto;
+package cz.swi.shared.dto;
 
 import java.util.List;
 

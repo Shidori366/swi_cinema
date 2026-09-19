@@ -1,6 +1,6 @@
 package cz.swi.cinema.controllers;
 
-import cz.swi.cinema.dto.MovieDto;
+import cz.swi.shared.dto.MovieDto;
 import cz.swi.cinema.services.MovieService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,7 +1,7 @@
 package cz.swi.cinema.controllers;
 
-import cz.swi.cinema.dto.ScreeningDto;
-import cz.swi.cinema.dto.SeatDto;
+import cz.swi.shared.dto.ScreeningDto;
+import cz.swi.shared.dto.SeatDto;
 import cz.swi.cinema.services.ScreeningService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

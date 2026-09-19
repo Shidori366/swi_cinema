@@ -1,6 +1,6 @@
 package cz.swi.cinema.mappers;
 
-import cz.swi.cinema.dto.ScreeningDto;
+import cz.swi.shared.dto.ScreeningDto;
 import cz.swi.cinema.models.Screening;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

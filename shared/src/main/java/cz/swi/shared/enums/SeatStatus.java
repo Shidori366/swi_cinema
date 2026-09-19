@@ -1,4 +1,4 @@
-package cz.swi.cinema.enums;
+package cz.swi.shared.enums;
 
 public enum SeatStatus {
     FREE,

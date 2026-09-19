@@ -1,7 +1,7 @@
 package cz.swi.cinema.models;
 
-import cz.swi.cinema.enums.PaymentMethod;
-import cz.swi.cinema.enums.PaymentStatus;
+import cz.swi.shared.enums.PaymentMethod;
+import cz.swi.shared.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

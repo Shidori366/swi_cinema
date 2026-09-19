@@ -1,7 +1,7 @@
 package cz.swi.cinema.services;
 
-import cz.swi.cinema.dto.ReservationDto;
-import cz.swi.cinema.enums.ReservationStatus;
+import cz.swi.shared.dto.ReservationDto;
+import cz.swi.shared.enums.ReservationStatus;
 import cz.swi.cinema.exceptions.ResourceNotFoundException;
 import cz.swi.cinema.mappers.ReservationMapper;
 import cz.swi.cinema.models.Reservation;

@@ -1,7 +1,7 @@
 package cz.swi.cinema.mappers;
 
-import cz.swi.cinema.dto.SeatDto;
-import cz.swi.cinema.enums.SeatStatus;
+import cz.swi.shared.dto.SeatDto;
+import cz.swi.shared.enums.SeatStatus;
 import cz.swi.cinema.models.Seat;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

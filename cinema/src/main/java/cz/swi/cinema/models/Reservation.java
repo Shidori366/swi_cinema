@@ -1,6 +1,6 @@
 package cz.swi.cinema.models;
 
-import cz.swi.cinema.enums.ReservationStatus;
+import cz.swi.shared.enums.ReservationStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

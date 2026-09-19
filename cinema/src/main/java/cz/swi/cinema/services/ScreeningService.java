@@ -1,9 +1,9 @@
 package cz.swi.cinema.services;
 
-import cz.swi.cinema.dto.ScreeningDto;
-import cz.swi.cinema.dto.SeatDto;
-import cz.swi.cinema.enums.ReservationStatus;
-import cz.swi.cinema.enums.SeatStatus;
+import cz.swi.shared.dto.ScreeningDto;
+import cz.swi.shared.dto.SeatDto;
+import cz.swi.shared.enums.ReservationStatus;
+import cz.swi.shared.enums.SeatStatus;
 import cz.swi.cinema.exceptions.ResourceNotFoundException;
 import cz.swi.cinema.mappers.ScreeningMapper;
 import cz.swi.cinema.mappers.SeatMapper;

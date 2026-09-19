@@ -1,7 +1,7 @@
 package cz.swi.cinema.controllers;
 
-import cz.swi.cinema.dto.CreateReservationRequestDto;
-import cz.swi.cinema.dto.ReservationDto;
+import cz.swi.shared.dto.CreateReservationRequestDto;
+import cz.swi.shared.dto.ReservationDto;
 import cz.swi.cinema.services.ReservationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

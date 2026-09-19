@@ -1,6 +1,6 @@
-package cz.swi.cinema.dto;
+package cz.swi.shared.dto;
 
-import cz.swi.cinema.enums.ReservationStatus;
+import cz.swi.shared.enums.ReservationStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
