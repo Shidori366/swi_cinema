@@ -18,6 +18,6 @@ public interface ReservationMapper {
     ReservationDto toDto(Reservation reservation, LocalDateTime expiresAt);
 
     default Long seatToId(Seat seat) {
-        return seat == null ? null : seat.getId();
+        return seat != null ? seat.getId() : null;
     }
 }

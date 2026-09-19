@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ScreeningMapper {
-    @Mapping(target = "movieId", source = "movie.id")
+    @Mapping(target = "movie", source = "movie")
     @Mapping(target = "roomId", source = "room.id")
     ScreeningDto toDto(Screening screening);
 }

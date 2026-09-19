@@ -5,6 +5,8 @@ import cz.swi.cinema.enums.ReservationStatus;
 import cz.swi.cinema.exceptions.ResourceNotFoundException;
 import cz.swi.cinema.mappers.ReservationMapper;
 import cz.swi.cinema.models.Reservation;
+import cz.swi.cinema.models.Screening;
+import cz.swi.cinema.models.Seat;
 import cz.swi.cinema.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,28 +19,35 @@ import java.util.List;
 public class ReservationService {
     public static final Duration HOLD_DURATION = Duration.ofMinutes(5);
 
-    private final ScreeningRepository screenings;
-    private final SeatRepository seats;
-    private final ReservationRepository reservations;
+    private final ScreeningRepository screeningRepository;
+    private final SeatRepository seatRepository;
+    private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
 
-    public ReservationService(ScreeningRepository screenings, SeatRepository seats, ReservationRepository reservations, ReservationMapper reservationMapper) {
-        this.screenings = screenings;
-        this.seats = seats;
-        this.reservations = reservations;
+    public ReservationService(ScreeningRepository screeningRepository, SeatRepository seatRepository, ReservationRepository reservationRepository, ReservationMapper reservationMapper) {
+        this.screeningRepository = screeningRepository;
+        this.seatRepository = seatRepository;
+        this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
     }
 
     @Transactional
-    public ReservationDto create(Long screeningId, Long seatId) {
-        reservations.acquireWriteLock(); // Before ANY read; lock remains held through commit.
+    public ReservationDto create(Long screeningId, List<Long> seatIds) {
+        if (seatIds.isEmpty()) {
+            throw new IllegalArgumentException("No seats to reserve");
+        }
+        reservationRepository.acquireWriteLock(); // Before ANY read; lock remains held through commit.
 
         LocalDateTime now = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
 
-        var screening = screenings.findById(screeningId).orElseThrow(() -> new ResourceNotFoundException("Screening not found"));
-        var seat = seats.findById(seatId).orElseThrow(() -> new ResourceNotFoundException("Seat not found"));
+        Screening screening = screeningRepository.findById(screeningId).orElseThrow(() -> new ResourceNotFoundException("Screening not found"));
+        List<Seat> seats = seatRepository.findAllById(seatIds);
 
-        if (!seat.getRoom().getId().equals(screening.getRoom().getId())) {
+        if (seats.size() != seatIds.size()) {
+            throw new ResourceNotFoundException("Seat not found");
+        }
+
+        if (seats.stream().anyMatch(s -> !s.getRoom().getId().equals(screening.getRoom().getId()))) {
             throw new IllegalArgumentException("Seat is not in the screening's room");
         }
 
@@ -48,18 +57,18 @@ public class ReservationService {
 
         deleteExpired(now);
 
-        if (reservations.isSeatUnavailable(screeningId, seatId, now.minus(HOLD_DURATION))) {
+        if (reservationRepository.isAnySeatUnavailable(screeningId, seatIds, now.minus(HOLD_DURATION))) {
             throw new IllegalStateException("Seat is already held or reserved");
         }
 
         Reservation reservation = new Reservation();
 
         reservation.setScreening(screening);
-        reservation.getSeats().add(seat);
+        reservation.getSeats().addAll(seats);
         reservation.setCreatedAt(now);
         reservation.setReservationStatus(ReservationStatus.PENDING);
 
-        return response(reservations.saveAndFlush(reservation));
+        return response(reservationRepository.saveAndFlush(reservation));
     }
 
     @Transactional(readOnly = true)
@@ -69,9 +78,9 @@ public class ReservationService {
 
     @Transactional(noRollbackFor = IllegalStateException.class)
     public ReservationDto confirm(Long id) {
-        reservations.acquireWriteLock();
+        reservationRepository.acquireWriteLock();
 
-        var reservation = requireReservation(id);
+        Reservation reservation = requireReservation(id);
 
         if (reservation.getReservationStatus() == ReservationStatus.RESERVED) {
             return response(reservation);
@@ -82,7 +91,7 @@ public class ReservationService {
         }
 
         if (!reservation.getCreatedAt().plus(HOLD_DURATION).isAfter(LocalDateTime.now())) {
-            reservations.delete(reservation);
+            reservationRepository.delete(reservation);
             throw new IllegalStateException("Reservation expired");
         }
 
@@ -93,44 +102,25 @@ public class ReservationService {
 
     @Transactional
     public void cancel(Long id) {
-        reservations.acquireWriteLock();
-        reservations.findById(id).ifPresent(reservations::delete);
+        reservationRepository.acquireWriteLock();
+        reservationRepository.findById(id).ifPresent(reservationRepository::delete);
     }
 
-    @Transactional
-    public void cancelPending(Long id, LocalDateTime expectedExpiry) {
-        reservations.acquireWriteLock();
-        reservations
-                .findById(id)
-                .filter(r -> r.getReservationStatus() == ReservationStatus.PENDING)
-                .filter(r -> r.getCreatedAt().plus(HOLD_DURATION).equals(expectedExpiry))
-                .ifPresent(reservations::delete);
-    }
+    private void deleteExpired(LocalDateTime now) {
+        List<Reservation> expired = reservationRepository.findByReservationStatusAndCreatedAtLessThanEqual(ReservationStatus.PENDING, now.minus(HOLD_DURATION));
 
-    @Transactional
-    public List<Long> removeExpired() {
-        reservations.acquireWriteLock();
-        return deleteExpired(LocalDateTime.now());
-    }
-
-    private List<Long> deleteExpired(LocalDateTime now) {
-        var expired = reservations.findByReservationStatusAndCreatedAtLessThanEqual(ReservationStatus.PENDING, now.minus(HOLD_DURATION));
-        var ids = expired.stream().map(Reservation::getId).toList();
-
-        reservations.deleteAll(expired);
-        reservations.flush();
-
-        return ids;
+        reservationRepository.deleteAll(expired);
+        reservationRepository.flush();
     }
 
     private Reservation requireReservation(Long id) {
-        return reservations
+        return reservationRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found or expired"));
     }
 
     private ReservationDto response(Reservation reservation) {
-        var expiresAt = reservation.getReservationStatus() == ReservationStatus.PENDING
+        LocalDateTime expiresAt = reservation.getReservationStatus() == ReservationStatus.PENDING
                 ? reservation.getCreatedAt().plus(HOLD_DURATION)
                 : null;
         return reservationMapper.toDto(reservation, expiresAt);

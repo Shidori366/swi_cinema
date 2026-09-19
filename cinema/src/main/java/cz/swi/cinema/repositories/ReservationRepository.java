@@ -22,11 +22,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("""
             select count(r) > 0 from Reservation r join r.seats s
-            where r.screening.id = :screeningId and s.id = :seatId and
+            where r.screening.id = :screeningId and s.id in (:seatIds) and
             (r.reservationStatus = cz.swi.cinema.enums.ReservationStatus.RESERVED or
             (r.reservationStatus = cz.swi.cinema.enums.ReservationStatus.PENDING and r.createdAt > :cutoff))
             """)
-    boolean isSeatUnavailable(Long screeningId, Long seatId, LocalDateTime cutoff);
+    boolean isAnySeatUnavailable(Long screeningId, List<Long> seatIds, LocalDateTime cutoff);
 
     List<Reservation> findByReservationStatusAndCreatedAtLessThanEqual(ReservationStatus status, LocalDateTime cutoff);
 

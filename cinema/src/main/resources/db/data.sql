@@ -1,15 +1,15 @@
 INSERT
-OR IGNORE INTO movie (id, name, director) VALUES
-   (1, 'The Shawshank Redemption', 'Frank Darabont'),
-   (2, 'The Godfather', 'Francis Ford Coppola'),
-   (3, 'The Dark Knight', 'Christopher Nolan'),
-   (4, 'Inception', 'Christopher Nolan'),
-   (5, 'Pulp Fiction', 'Quentin Tarantino'),
-   (6, 'Schindler''s List', 'Steven Spielberg'),
-   (7, 'The Lord of the Rings: The Return of the King', 'Peter Jackson'),
-   (8, 'Fight Club', 'David Fincher'),
-   (9, 'Forrest Gump', 'Robert Zemeckis'),
-   (10, 'The Matrix', 'Lana Wachowski, Lilly Wachowski');
+OR IGNORE INTO movie (id, name, director, duration) VALUES
+   (1, 'The Shawshank Redemption', 'Frank Darabont', 142),
+   (2, 'The Godfather', 'Francis Ford Coppola', 175),
+   (3, 'The Dark Knight', 'Christopher Nolan', 152),
+   (4, 'Inception', 'Christopher Nolan', 148),
+   (5, 'Pulp Fiction', 'Quentin Tarantino', 154),
+   (6, 'Schindler''s List', 'Steven Spielberg', 195),
+   (7, 'The Lord of the Rings: The Return of the King', 'Peter Jackson', 201),
+   (8, 'Fight Club', 'David Fincher', 139),
+   (9, 'Forrest Gump', 'Robert Zemeckis', 142),
+   (10, 'The Matrix', 'Lana Wachowski, Lilly Wachowski', 136);
 
 INSERT
 OR IGNORE INTO room (id)
@@ -63,13 +63,14 @@ INSERT INTO screening (id, time, movie_id, room_id) VALUES
 INSERT INTO reservation (id, user_id, screening_id, reservation_status, created_at) VALUES
     (1, 1, 101, 'RESERVED', datetime('now')),
     (2, 2, 102, 'PENDING', datetime('now')),
-    (3, 1, 101, 'CANCELLED', datetime('now'));
+    (3, 1, 101, 'RESERVED', datetime('now'));
 
 INSERT INTO payment (id, reservation_id, amount, currency, payment_method, payment_status, created_at) VALUES
     (1, 1, 350.00, 'CZK', 'CREDIT_CARD', 'COMPLETED', datetime('now')),
     (2, 2, 500.00, 'CZK', 'CREDIT_CARD', 'PENDING', datetime('now'));
 
 INSERT INTO seat_reservation (reservation_id, seat_id) VALUES
-    (1, 10),
-    (1, 11),
-    (2, 12);
+    (1, 1),
+    (1, 2),
+    (2, 10),
+    (3, 3);

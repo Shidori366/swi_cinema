@@ -1,4 +1,6 @@
 package cz.swi.cinema.dto;
 
-public record CreateReservationRequestDto(Long screeningId, Long seatId) {
+import java.util.List;
+
+public record CreateReservationRequestDto(Long screeningId, List<Long> seatIds) {
 }

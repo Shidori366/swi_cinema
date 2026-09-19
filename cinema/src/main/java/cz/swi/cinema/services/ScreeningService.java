@@ -7,6 +7,8 @@ import cz.swi.cinema.enums.SeatStatus;
 import cz.swi.cinema.exceptions.ResourceNotFoundException;
 import cz.swi.cinema.mappers.ScreeningMapper;
 import cz.swi.cinema.mappers.SeatMapper;
+import cz.swi.cinema.models.Reservation;
+import cz.swi.cinema.models.Seat;
 import cz.swi.cinema.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,64 +17,63 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional(readOnly = true)
 public class ScreeningService {
 
-    private final ScreeningRepository screenings;
-    private final SeatRepository seats;
-    private final ReservationRepository reservations;
+    private final ScreeningRepository screeningRepository;
+    private final SeatRepository seatRepository;
+    private final ReservationRepository reservationRepository;
     private final ScreeningMapper screeningMapper;
     private final SeatMapper seatMapper;
 
-    public ScreeningService(ScreeningRepository screenings, SeatRepository seats, ReservationRepository reservations,
+    public ScreeningService(ScreeningRepository screeningRepository, SeatRepository seatRepository, ReservationRepository reservationRepository,
                             ScreeningMapper screeningMapper, SeatMapper seatMapper) {
-        this.screenings = screenings;
-        this.seats = seats;
-        this.reservations = reservations;
+        this.screeningRepository = screeningRepository;
+        this.seatRepository = seatRepository;
+        this.reservationRepository = reservationRepository;
         this.screeningMapper = screeningMapper;
         this.seatMapper = seatMapper;
     }
 
     public List<ScreeningDto> listScreenings() {
-        return screenings.findAllByOrderByTimeAsc().stream().map(screeningMapper::toDto).toList();
+        return screeningRepository.findAllByOrderByTimeAsc().stream().map(screeningMapper::toDto).toList();
     }
 
     public List<ScreeningDto> screeningsForMovie(Long movieId) {
-        return screenings.findByMovieIdOrderByTimeAsc(movieId).stream().map(screeningMapper::toDto).toList();
+        return screeningRepository.findByMovieIdOrderByTimeAsc(movieId).stream().map(screeningMapper::toDto).toList();
     }
 
     public ScreeningDto getScreening(Long id) {
-        return screeningMapper.toDto(screenings.findById(id).orElseThrow(() -> new ResourceNotFoundException("Screening not found")));
+        return screeningMapper.toDto(screeningRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Screening not found")));
     }
 
     public List<SeatDto> seatsForScreening(Long screeningId) {
-        getScreening(screeningId);
+        Map<Long, SeatStatus> seatStates = new HashMap<>();
 
-        var states = new HashMap<Long, SeatStatus>();
+        LocalDateTime currentTimeMinusHoldDuration = LocalDateTime.now().minus(ReservationService.HOLD_DURATION);
+        List<Reservation> activeReservations = reservationRepository.findActiveByScreeningId(screeningId, currentTimeMinusHoldDuration);
 
-        var currentTimeMinusHoldDuration = LocalDateTime.now().minus(ReservationService.HOLD_DURATION);
-        var activeReservations = reservations.findActiveByScreeningId(screeningId, currentTimeMinusHoldDuration);
-
-        for (var reservation : activeReservations) {
-            var status = reservation.getReservationStatus() == ReservationStatus.RESERVED
+        for (Reservation reservation : activeReservations) {
+            SeatStatus seatStatus = reservation.getReservationStatus() == ReservationStatus.RESERVED
                     ? SeatStatus.RESERVED
                     : SeatStatus.CANDIDATE;
 
-            for (var seat : reservation.getSeats()) {
-                var previousStatus = states.get(seat.getId());
+            for (Seat seat : reservation.getSeats()) {
+                SeatStatus previousStatus = seatStates.get(seat.getId());
 
                 if (previousStatus != SeatStatus.RESERVED) {
-                    states.put(seat.getId(), status);
+                    seatStates.put(seat.getId(), seatStatus);
                 }
             }
         }
 
-        var result = new ArrayList<SeatDto>();
+        List<SeatDto> result = new ArrayList<>();
 
-        for (var seat : seats.findByScreeningId(screeningId)) {
-            var status = states.getOrDefault(seat.getId(), SeatStatus.FREE);
+        for (Seat seat : seatRepository.findByScreeningId(screeningId)) {
+            SeatStatus status = seatStates.getOrDefault(seat.getId(), SeatStatus.FREE);
 
             result.add(seatMapper.toDto(seat, status));
         }
