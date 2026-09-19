@@ -14,7 +14,6 @@ public interface ReservationMapper {
     @Mapping(target = "screeningId", source = "reservation.screening.id")
     @Mapping(target = "seatIds", source = "reservation.seats")
     @Mapping(target = "status", source = "reservation.reservationStatus")
-    @Mapping(target = "expiresAt", source = "expiresAt")
     ReservationDto toDto(Reservation reservation, LocalDateTime expiresAt);
 
     default Long seatToId(Seat seat) {

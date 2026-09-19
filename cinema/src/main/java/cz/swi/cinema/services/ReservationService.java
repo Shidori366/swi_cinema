@@ -7,7 +7,9 @@ import cz.swi.cinema.mappers.ReservationMapper;
 import cz.swi.cinema.models.Reservation;
 import cz.swi.cinema.models.Screening;
 import cz.swi.cinema.models.Seat;
-import cz.swi.cinema.repositories.*;
+import cz.swi.cinema.repositories.ReservationRepository;
+import cz.swi.cinema.repositories.ScreeningRepository;
+import cz.swi.cinema.repositories.SeatRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +34,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public ReservationDto create(Long screeningId, List<Long> seatIds) {
+    public ReservationDto create(Long screeningId, List<Long> seatIds, String email) {
         if (seatIds.isEmpty()) {
             throw new IllegalArgumentException("No seats to reserve");
         }
@@ -66,6 +68,7 @@ public class ReservationService {
         reservation.setScreening(screening);
         reservation.getSeats().addAll(seats);
         reservation.setCreatedAt(now);
+        reservation.setContactEmail(email);
         reservation.setReservationStatus(ReservationStatus.PENDING);
 
         return response(reservationRepository.saveAndFlush(reservation));

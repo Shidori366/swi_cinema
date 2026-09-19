@@ -19,13 +19,20 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
+    // TODO: Setup security context for user auth and get email from there, if there is any user currently logged in.
     @PostMapping
     public ResponseEntity<ReservationDto> create(@RequestBody CreateReservationRequestDto request) {
         if (request.screeningId() == null || request.seatIds() == null) {
             throw new IllegalArgumentException("screeningId and seatId must be positive numbers");
         }
 
-        ReservationDto reservation = reservationService.create(request.screeningId(), request.seatIds());
+        String email = request.email();
+
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+
+        ReservationDto reservation = reservationService.create(request.screeningId(), request.seatIds(), email);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(reservation.id())

@@ -60,10 +60,10 @@ INSERT INTO screening (id, time, movie_id, room_id) VALUES
     (104, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 1, 4),
     (105, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 2, 5);
 
-INSERT INTO reservation (id, user_id, screening_id, reservation_status, created_at) VALUES
-    (1, 1, 101, 'RESERVED', datetime('now')),
-    (2, 2, 102, 'PENDING', datetime('now')),
-    (3, 1, 101, 'RESERVED', datetime('now'));
+INSERT INTO reservation (id, screening_id, reservation_status, created_at, contact_email) VALUES
+    (1, 101, 'RESERVED', datetime('now'), 'example@gmail.com'),
+    (2, 102, 'PENDING', datetime('now'), 'example2@gmail.com'),
+    (3, 101, 'RESERVED', datetime('now'), 'example3@gmail.com');
 
 INSERT INTO payment (id, reservation_id, amount, currency, payment_method, payment_status, created_at) VALUES
     (1, 1, 350.00, 'CZK', 'CREDIT_CARD', 'COMPLETED', datetime('now')),

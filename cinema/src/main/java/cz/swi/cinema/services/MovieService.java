@@ -1,8 +1,8 @@
 package cz.swi.cinema.services;
 
-import cz.swi.cinema.models.Movie;
 import cz.swi.cinema.dto.MovieDto;
 import cz.swi.cinema.mappers.MovieMapper;
+import cz.swi.cinema.models.Movie;
 import cz.swi.cinema.repositories.MovieRepository;
 import org.springframework.stereotype.Service;
 

@@ -18,6 +18,9 @@ public class Reservation {
     @Column(columnDefinition = "INTEGER")
     private Long id;
 
+    @Column(nullable = false)
+    private String contactEmail;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

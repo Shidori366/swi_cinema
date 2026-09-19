@@ -1,6 +1,5 @@
 package cz.swi.cinema.repositories;
 
-
 import cz.swi.cinema.models.Movie;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;

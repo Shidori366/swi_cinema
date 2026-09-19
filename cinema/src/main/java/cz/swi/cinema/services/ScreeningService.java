@@ -9,7 +9,9 @@ import cz.swi.cinema.mappers.ScreeningMapper;
 import cz.swi.cinema.mappers.SeatMapper;
 import cz.swi.cinema.models.Reservation;
 import cz.swi.cinema.models.Seat;
-import cz.swi.cinema.repositories.*;
+import cz.swi.cinema.repositories.ReservationRepository;
+import cz.swi.cinema.repositories.ScreeningRepository;
+import cz.swi.cinema.repositories.SeatRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
