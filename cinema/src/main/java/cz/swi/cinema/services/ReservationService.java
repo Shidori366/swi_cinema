@@ -96,6 +96,14 @@ public class ReservationService {
         return response(requireReservation(id));
     }
 
+    @Transactional(readOnly = true)
+    public List<ReservationDto> getByEmail(String email) {
+        return reservationRepository.findByContactEmail(email)
+                .stream()
+                .map(this::response)
+                .toList();
+    }
+
     @Transactional(noRollbackFor = IllegalStateException.class)
     public ReservationDto confirm(Long id) {
         reservationRepository.acquireWriteLock();
