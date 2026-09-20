@@ -12,6 +12,8 @@ import java.util.List;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findByScreeningId(Long screeningId);
 
+    List<Reservation> findByContactEmail(String contactEmail);
+
     @Query("""
             select distinct r from Reservation r left join fetch r.seats
             where r.screening.id = :screeningId and

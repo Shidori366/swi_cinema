@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class HttpClientWrapper {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();
 
     private HttpClientWrapper() {}
 
@@ -28,7 +28,17 @@ public class HttpClientWrapper {
     public static <T, B> T postRequest(String url, Map<String, String> params, B body, Class<T> responseType) throws URISyntaxException, IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(UrlUtils.createUrlWithParams(url, params)))
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(OBJECT_MAPPER.writeValueAsString(body))).build();
+
+        return sendRequestAndGetResult(request, responseType);
+    }
+
+    public static <T> T postRequestNoBody(String url, Map<String, String> params, Class<T> responseType) throws URISyntaxException, IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(UrlUtils.createUrlWithParams(url, params)))
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
 
         return sendRequestAndGetResult(request, responseType);
     }

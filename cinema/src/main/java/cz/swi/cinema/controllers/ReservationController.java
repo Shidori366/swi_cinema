@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/reservations")
@@ -44,6 +45,15 @@ public class ReservationController {
     @GetMapping("/{id}")
     public ResponseEntity<ReservationDto> get(@PathVariable Long id) {
         return ResponseEntity.ok(reservationService.get(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ReservationDto>> getByEmail(
+            @RequestParam String email
+    ) {
+        return ResponseEntity.ok(
+                reservationService.getByEmail(email)
+        );
     }
 
     @PostMapping("/{id}/confirm")
