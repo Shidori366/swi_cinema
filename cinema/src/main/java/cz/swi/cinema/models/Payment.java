@@ -1,6 +1,5 @@
 package cz.swi.cinema.models;
 
-import cz.swi.shared.enums.PaymentMethod;
 import cz.swi.shared.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 public class Payment {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -22,9 +21,6 @@ public class Payment {
 
     @Column(nullable = false, length = 3)
     private String currency = "CZK";
-
-    @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

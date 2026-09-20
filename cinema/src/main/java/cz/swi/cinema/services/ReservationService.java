@@ -1,20 +1,24 @@
 package cz.swi.cinema.services;
 
-import cz.swi.shared.dto.ReservationDto;
-import cz.swi.shared.enums.ReservationStatus;
 import cz.swi.cinema.exceptions.ResourceNotFoundException;
 import cz.swi.cinema.mappers.ReservationMapper;
+import cz.swi.cinema.models.Payment;
 import cz.swi.cinema.models.Reservation;
 import cz.swi.cinema.models.Screening;
 import cz.swi.cinema.models.Seat;
+import cz.swi.cinema.repositories.PaymentRepository;
 import cz.swi.cinema.repositories.ReservationRepository;
 import cz.swi.cinema.repositories.ScreeningRepository;
 import cz.swi.cinema.repositories.SeatRepository;
+import cz.swi.shared.dto.ReservationDto;
+import cz.swi.shared.enums.PaymentStatus;
+import cz.swi.shared.enums.ReservationStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -25,12 +29,14 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final ReservationRepository reservationRepository;
     private final ReservationMapper reservationMapper;
+    private final PaymentRepository paymentRepository;
 
-    public ReservationService(ScreeningRepository screeningRepository, SeatRepository seatRepository, ReservationRepository reservationRepository, ReservationMapper reservationMapper) {
+    public ReservationService(ScreeningRepository screeningRepository, SeatRepository seatRepository, ReservationRepository reservationRepository, ReservationMapper reservationMapper, PaymentRepository paymentRepository) {
         this.screeningRepository = screeningRepository;
         this.seatRepository = seatRepository;
         this.reservationRepository = reservationRepository;
         this.reservationMapper = reservationMapper;
+        this.paymentRepository = paymentRepository;
     }
 
     @Transactional
@@ -40,7 +46,7 @@ public class ReservationService {
         }
         reservationRepository.acquireWriteLock(); // Before ANY read; lock remains held through commit.
 
-        LocalDateTime now = LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 
         Screening screening = screeningRepository.findById(screeningId).orElseThrow(() -> new ResourceNotFoundException("Screening not found"));
         List<Seat> seats = seatRepository.findAllById(seatIds);
@@ -71,6 +77,17 @@ public class ReservationService {
         reservation.setContactEmail(email);
         reservation.setReservationStatus(ReservationStatus.PENDING);
 
+        reservation = reservationRepository.saveAndFlush(reservation);
+
+        Payment payment = new Payment();
+        payment.setAmount(screening.getPrice());
+        payment.setCreatedAt(now);
+        payment.setPaymentStatus(PaymentStatus.PENDING);
+        payment.setCurrency("CZK");
+
+        payment.setReservation(reservation);
+        reservation.setPayment(payment);
+
         return response(reservationRepository.saveAndFlush(reservation));
     }
 
@@ -89,16 +106,17 @@ public class ReservationService {
             return response(reservation);
         }
 
-        if (reservation.getReservationStatus() != ReservationStatus.PENDING) {
-            throw new IllegalStateException("Reservation is not pending");
-        }
-
         if (!reservation.getCreatedAt().plus(HOLD_DURATION).isAfter(LocalDateTime.now())) {
             reservationRepository.delete(reservation);
             throw new IllegalStateException("Reservation expired");
         }
 
+        Payment payment = reservation.getPayment();
+
         reservation.setReservationStatus(ReservationStatus.RESERVED);
+        payment.setPaymentStatus(PaymentStatus.COMPLETED);
+        reservationRepository.save(reservation);
+        paymentRepository.save(payment);
 
         return response(reservation);
     }

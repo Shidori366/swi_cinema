@@ -1,18 +1,20 @@
 INSERT
-OR IGNORE INTO movie (id, name, director, duration) VALUES
-   (1, 'The Shawshank Redemption', 'Frank Darabont', 142),
-   (2, 'The Godfather', 'Francis Ford Coppola', 175),
-   (3, 'The Dark Knight', 'Christopher Nolan', 152),
-   (4, 'Inception', 'Christopher Nolan', 148),
-   (5, 'Pulp Fiction', 'Quentin Tarantino', 154),
-   (6, 'Schindler''s List', 'Steven Spielberg', 195),
-   (7, 'The Lord of the Rings: The Return of the King', 'Peter Jackson', 201),
-   (8, 'Fight Club', 'David Fincher', 139),
-   (9, 'Forrest Gump', 'Robert Zemeckis', 142),
-   (10, 'The Matrix', 'Lana Wachowski, Lilly Wachowski', 136);
+    OR IGNORE
+INTO movie (id, name, director, duration)
+VALUES (1, 'The Shawshank Redemption', 'Frank Darabont', 142),
+       (2, 'The Godfather', 'Francis Ford Coppola', 175),
+       (3, 'The Dark Knight', 'Christopher Nolan', 152),
+       (4, 'Inception', 'Christopher Nolan', 148),
+       (5, 'Pulp Fiction', 'Quentin Tarantino', 154),
+       (6, 'Schindler''s List', 'Steven Spielberg', 195),
+       (7, 'The Lord of the Rings: The Return of the King', 'Peter Jackson', 201),
+       (8, 'Fight Club', 'David Fincher', 139),
+       (9, 'Forrest Gump', 'Robert Zemeckis', 142),
+       (10, 'The Matrix', 'Lana Wachowski, Lilly Wachowski', 136);
 
 INSERT
-OR IGNORE INTO room (id)
+    OR IGNORE
+INTO room (id)
 VALUES (1),
        (2),
        (3),
@@ -20,7 +22,8 @@ VALUES (1),
        (5);
 
 INSERT
-OR IGNORE INTO seat (id, room_id)
+    OR IGNORE
+INTO seat (id, room_id)
 VALUES
 -- Room 1
 (1, 1),
@@ -53,24 +56,25 @@ VALUES
 (24, 5),
 (25, 5);
 
-INSERT INTO screening (id, time, movie_id, room_id) VALUES
-    (101, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 1, 1),
-    (102, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 2, 2),
-    (103, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 3, 3),
-    (104, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 1, 4),
-    (105, datetime('now', '+' || (abs(random()) % 30) || ' days', '+' || (abs(random()) % 24) || ' hours'), 2, 5);
+INSERT INTO screening (id, time, movie_id, room_id, price)
+VALUES (101, datetime('now', '+' || ((abs(random()) % 30) + 1) || ' days', '+' || (abs(random()) % 24) || ' hours'), 1, 1, 200.00),
+       (102, datetime('now', '+' || ((abs(random()) % 30) + 1) || ' days', '+' || (abs(random()) % 24) || ' hours'), 2, 2, 250.00),
+       (103, datetime('now', '+' || ((abs(random()) % 30) + 1) || ' days', '+' || (abs(random()) % 24) || ' hours'), 3, 3, 180.00),
+       (104, datetime('now', '+' || ((abs(random()) % 30) + 1) || ' days', '+' || (abs(random()) % 24) || ' hours'), 1, 4, 200.00),
+       (105, datetime('now', '+' || ((abs(random()) % 30) + 1) || ' days', '+' || (abs(random()) % 24) || ' hours'), 2, 5, 220.50);
 
-INSERT INTO reservation (id, screening_id, reservation_status, created_at, contact_email) VALUES
-    (1, 101, 'RESERVED', datetime('now'), 'example@gmail.com'),
-    (2, 102, 'PENDING', datetime('now'), 'example2@gmail.com'),
-    (3, 101, 'RESERVED', datetime('now'), 'example3@gmail.com');
+INSERT INTO reservation (id, screening_id, reservation_status, created_at, contact_email)
+VALUES (1, 101, 'RESERVED', datetime('now', 'localtime'), 'example@gmail.com'),
+       (2, 102, 'PENDING', datetime('now', 'localtime'), 'example2@gmail.com'),
+       (3, 101, 'RESERVED', datetime('now', 'localtime'), 'example3@gmail.com');
 
-INSERT INTO payment (id, reservation_id, amount, currency, payment_method, payment_status, created_at) VALUES
-    (1, 1, 350.00, 'CZK', 'CREDIT_CARD', 'COMPLETED', datetime('now')),
-    (2, 2, 500.00, 'CZK', 'CREDIT_CARD', 'PENDING', datetime('now'));
+INSERT INTO payment (id, reservation_id, amount, currency, payment_status, created_at)
+VALUES (1, 1, 350.00, 'CZK', 'COMPLETED', datetime('now')),
+       (2, 2, 500.00, 'CZK', 'PENDING', datetime('now')),
+       (3, 3, 500.00, 'CZK', 'COMPLETED', datetime('now'));
 
-INSERT INTO seat_reservation (reservation_id, seat_id) VALUES
-    (1, 1),
-    (1, 2),
-    (2, 10),
-    (3, 3);
+INSERT INTO seat_reservation (reservation_id, seat_id)
+VALUES (1, 1),
+       (1, 2),
+       (2, 10),
+       (3, 3);
