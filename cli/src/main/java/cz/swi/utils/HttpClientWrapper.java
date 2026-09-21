@@ -46,6 +46,7 @@ public class HttpClientWrapper {
     public static <B> boolean postRequestNoResponse(String url, Map<String, String> params, B body) throws URISyntaxException, IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(UrlUtils.createUrlWithParams(url, params)))
+                .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(OBJECT_MAPPER.writeValueAsString(body))).build();
 
         HttpResponse<Void> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.discarding());

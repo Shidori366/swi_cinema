@@ -30,7 +30,7 @@ public class ReservationController {
         String email = request.email();
 
         if (email == null) {
-            throw new IllegalArgumentException("Email cannot be empty");
+            throw new IllegalArgumentException("Email cannot be empty.");
         }
 
         ReservationDto reservation = reservationService.create(request.screeningId(), request.seatIds(), email);

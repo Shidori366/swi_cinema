@@ -18,6 +18,6 @@ public class AppConfig {
     }
 
     public static String getBaseUrl() {
-        return properties.getProperty("server.base-url", "http://localhost:8080");
+        return properties.getProperty("server.base-url", "http://localhost:8080/");
     }
 }
