@@ -1,0 +1,59 @@
+@startuml Cancel Reservation Sequence
+
+actor User
+participant UI
+participant ReservationController
+participant ReservationService
+participant ReservationRepository
+database DB
+
+User -> UI: Select reservation
+User -> UI: Request reservation cancellation
+
+UI -> ReservationController: DELETE /reservations/{id}
+activate ReservationController
+
+ReservationController -> ReservationService: cancel(id)
+activate ReservationService
+
+ReservationService -> ReservationRepository: findById(id)
+activate ReservationRepository
+
+ReservationRepository -> DB: SELECT reservation by ID
+DB --> ReservationRepository: reservation row / empty
+
+ReservationRepository --> ReservationService: Optional<Reservation>
+deactivate ReservationRepository
+
+alt Reservation does not exist
+    ReservationService --> ReservationController: ResourceNotFoundException
+    ReservationController --> UI: 404 Not Found
+    UI --> User: Display cancellation rejected
+
+else Reservation cannot be cancelled
+    ReservationService --> ReservationController: IllegalStateException
+    ReservationController --> UI: 409 Conflict
+    UI --> User: Display cancellation rejected
+
+else Reservation can be cancelled
+
+    ReservationService -> ReservationRepository: delete(reservation)
+    activate ReservationRepository
+
+    ReservationRepository -> DB: DELETE reservation
+    note right of DB: Seats of the reservation\nbecome FREE
+    DB --> ReservationRepository: deleted
+
+    ReservationRepository --> ReservationService: void
+    deactivate ReservationRepository
+
+    ReservationService --> ReservationController: void
+    ReservationController --> UI: 204 No Content
+    UI --> User: Display cancellation result\n(reservation cancelled)
+
+end
+
+deactivate ReservationService
+deactivate ReservationController
+
+@enduml

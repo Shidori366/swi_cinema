@@ -1,0 +1,37 @@
+@startuml View Reservations Sequence
+
+actor User
+participant UI
+participant ReservationController
+participant ReservationService
+participant ReservationRepository
+database DB
+
+User -> UI: Request reservations
+
+UI -> ReservationController: GET /reservations
+activate ReservationController
+
+ReservationController -> ReservationService: listReservations(user)
+activate ReservationService
+
+ReservationService -> ReservationRepository: findByUser(user)
+activate ReservationRepository
+
+ReservationRepository -> DB: SELECT reservations of user
+DB --> ReservationRepository: reservation rows
+
+ReservationRepository --> ReservationService: List<Reservation>
+deactivate ReservationRepository
+
+ReservationService -> ReservationService: Map Reservation -> ReservationDto
+
+ReservationService --> ReservationController: List<ReservationDto>
+deactivate ReservationService
+
+ReservationController --> UI: 200 OK\nList<ReservationDto>
+deactivate ReservationController
+
+UI --> User: Display reservations
+
+@enduml

@@ -1,0 +1,37 @@
+@startuml View Screenings Sequence
+
+actor User
+participant UI
+participant ScreeningController
+participant ScreeningService
+participant ScreeningRepository
+database DB
+
+User -> UI: Request screenings
+
+UI -> ScreeningController: GET /screenings
+activate ScreeningController
+
+ScreeningController -> ScreeningService: listScreenings()
+activate ScreeningService
+
+ScreeningService -> ScreeningRepository: findAllByOrderByTimeAsc()
+activate ScreeningRepository
+
+ScreeningRepository -> DB: SELECT screenings ORDER BY time
+DB --> ScreeningRepository: screening rows
+
+ScreeningRepository --> ScreeningService: List<Screening>
+deactivate ScreeningRepository
+
+ScreeningService -> ScreeningService: Map Screening -> ScreeningDto
+
+ScreeningService --> ScreeningController: List<ScreeningDto>
+deactivate ScreeningService
+
+ScreeningController --> UI: 200 OK\nList<ScreeningDto>
+deactivate ScreeningController
+
+UI --> User: Display screenings
+
+@enduml

@@ -1,0 +1,103 @@
+@startuml Pay Reservation Sequence
+
+actor User
+participant UI
+participant ReservationController
+participant ReservationService
+participant "PaymentGateway\n<<external>>" as PaymentGateway
+participant ReservationRepository
+participant PaymentRepository
+database DB
+
+User -> UI: Select reservation
+User -> UI: Request payment
+
+UI -> ReservationController: POST /reservations/{id}/confirm
+activate ReservationController
+
+ReservationController -> ReservationService: confirm(id)
+activate ReservationService
+
+ReservationService -> ReservationRepository: findById(id)
+activate ReservationRepository
+
+ReservationRepository -> DB: SELECT reservation by ID
+DB --> ReservationRepository: reservation row / empty
+
+ReservationRepository --> ReservationService: Optional<Reservation>
+deactivate ReservationRepository
+
+alt Reservation does not exist
+    ReservationService --> ReservationController: ResourceNotFoundException
+    ReservationController --> UI: 404 Not Found
+    UI --> User: Display payment rejected
+
+else Reservation is not PENDING
+    ReservationService --> ReservationController: IllegalStateException
+    ReservationController --> UI: 409 Conflict
+    UI --> User: Display payment rejected
+
+else Reservation expired (createdAt + 5 min <= now)
+
+    ReservationService -> ReservationRepository: delete(reservation)
+    activate ReservationRepository
+
+    ReservationRepository -> DB: DELETE reservation
+    note right of DB: Seats of the reservation\nbecome FREE
+    DB --> ReservationRepository: deleted
+
+    ReservationRepository --> ReservationService: void
+    deactivate ReservationRepository
+
+    ReservationService --> ReservationController: IllegalStateException\nReservation expired
+    ReservationController --> UI: 409 Conflict
+    UI --> User: Display payment rejected\n(reservation expired)
+
+else Reservation is valid
+
+    ReservationService -> PaymentGateway: processPayment(payment)
+    activate PaymentGateway
+    PaymentGateway --> ReservationService: payment result
+    deactivate PaymentGateway
+
+    alt Payment failed
+        ReservationService --> ReservationController: PaymentFailedException
+        ReservationController --> UI: 402 Payment Required
+        UI --> User: Display payment rejected
+
+    else Payment successful
+
+        ReservationService -> ReservationService: reservation.status = RESERVED\npayment.status = COMPLETED
+
+        ReservationService -> ReservationRepository: save(reservation)
+        activate ReservationRepository
+
+        ReservationRepository -> DB: UPDATE reservation
+        note right of DB: Seats of the reservation\nbecome RESERVED
+        DB --> ReservationRepository: updated row
+
+        ReservationRepository --> ReservationService: saved Reservation
+        deactivate ReservationRepository
+
+        ReservationService -> PaymentRepository: save(payment)
+        activate PaymentRepository
+
+        PaymentRepository -> DB: UPDATE payment
+        DB --> PaymentRepository: updated row
+
+        PaymentRepository --> ReservationService: saved Payment
+        deactivate PaymentRepository
+
+        ReservationService -> ReservationService: Map Reservation -> ReservationDto
+
+        ReservationService --> ReservationController: ReservationDto
+        ReservationController --> UI: 200 OK\nReservationDto
+        UI --> User: Display payment result\n(reservation confirmed)
+    end
+
+end
+
+deactivate ReservationService
+deactivate ReservationController
+
+@enduml

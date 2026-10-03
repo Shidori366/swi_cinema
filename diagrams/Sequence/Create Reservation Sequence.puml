@@ -1,0 +1,68 @@
+@startuml Create Reservation Sequence
+
+actor User
+participant UI
+participant ReservationController
+participant ReservationService
+participant SeatRepository
+participant ReservationRepository
+database DB
+
+User -> UI: Select screening and seats
+User -> UI: Confirm reservation
+
+UI -> ReservationController: POST /reservations\nCreateReservationRequest
+activate ReservationController
+
+ReservationController -> ReservationService: create(request)
+activate ReservationService
+
+ReservationService -> SeatRepository: findUnavailableSeatIds(\nscreeningId, seatIds, activeSince)
+activate SeatRepository
+
+SeatRepository -> DB: SELECT unavailable seat IDs
+DB --> SeatRepository: List<Long>
+
+SeatRepository --> ReservationService: unavailableSeatIds
+deactivate SeatRepository
+
+alt Some seats are unavailable
+    ReservationService --> ReservationController: SeatNotAvailableException
+    ReservationController --> UI: 409 Conflict
+    UI --> User: Display unavailable seats
+
+else All seats are available
+
+    ReservationService -> ReservationRepository: deleteExpiredPending(\nscreeningId, seatIds, activeSince)
+    activate ReservationRepository
+
+    ReservationRepository -> DB: DELETE expired PENDING reservations
+    DB --> ReservationRepository: deleted rows count
+
+    ReservationRepository --> ReservationService: deletedCount
+    deactivate ReservationRepository
+
+    ReservationService -> ReservationService: Create Reservation entity\nstate = PENDING\nexpiresAt = now + 5 min
+
+    ReservationService -> ReservationRepository: save(reservation)
+    activate ReservationRepository
+
+    ReservationRepository -> DB: INSERT reservation
+    DB --> ReservationRepository: generated ID / persisted row
+
+    ReservationRepository --> ReservationService: saved Reservation
+    deactivate ReservationRepository
+
+    ReservationService -> ReservationService: Map Reservation -> ReservationDto
+
+    ReservationService --> ReservationController: ReservationDto
+
+    ReservationController --> UI: 201 Created\nReservationDto
+    UI --> User: Display reservation\nand expiration time
+
+end
+
+deactivate ReservationService
+deactivate ReservationController
+
+@enduml

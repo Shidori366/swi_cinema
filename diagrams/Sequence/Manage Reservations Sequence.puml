@@ -1,0 +1,42 @@
+@startuml Manage Reservations Sequence
+
+actor Admin
+participant UI
+participant ReservationController
+participant ReservationService
+participant ReservationRepository
+database DB
+
+Admin -> UI: Request reservations
+
+UI -> ReservationController: GET /admin/reservations
+activate ReservationController
+
+ReservationController -> ReservationService: getAll()
+activate ReservationService
+
+ReservationService -> ReservationRepository: findAll()
+activate ReservationRepository
+
+ReservationRepository -> DB: SELECT all reservations
+DB --> ReservationRepository: reservation rows
+
+ReservationRepository --> ReservationService: List<Reservation>
+deactivate ReservationRepository
+
+ReservationService -> ReservationService: Map Reservation -> ReservationDto
+
+ReservationService --> ReservationController: List<ReservationDto>
+deactivate ReservationService
+
+ReservationController --> UI: 200 OK\nList<ReservationDto>
+deactivate ReservationController
+
+UI --> Admin: Display reservations
+
+ref over Admin, DB
+    Cancel Reservation
+    (see Cancel Reservation Sequence)
+end ref
+
+@enduml
