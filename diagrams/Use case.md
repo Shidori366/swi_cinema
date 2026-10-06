@@ -62,18 +62,18 @@
 
 ### Alternative scenarios
 
-**4a. The seat has been `PENDING` for more than 5 minutes**
+**3a. The seat has been `PENDING` for more than 5 minutes**
 
 1. The system sets the seat to `PENDING` again for the new user.
 2. The system resets the timer.
 3. Continue with step 5.
 
-**4b. The seat has been `PENDING` for less than 5 minutes**
+**3b. The seat has been `PENDING` for less than 5 minutes**
 
 1. The system rejects the reservation.
 2. Continue with step 5.
 
-**4c. The seat is `RESERVED`**
+**3c. The seat is `RESERVED`**
 
 1. The system rejects the reservation.
 2. Continue with step 5.
