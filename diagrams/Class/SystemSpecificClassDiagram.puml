@@ -1,0 +1,410 @@
+@startuml SystemSpecificClassDiagram
+
+title Cinema Reservation - System Specific Class Diagram
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+
+
+package "web : Client (Vue 3 SPA, TypeScript)" as client {
+
+    class App <<Vue component>> {
+        + router: Router
+    }
+
+    class Router <<vue-router>> {
+        + routes: RouteRecord[]
+        + beforeEach(guard: NavigationGuard): void
+    }
+
+    class ScreeningsView <<Vue component>> <<Observer>> {
+        + selectScreening(screeningId: number): void
+    }
+
+    class SeatSelectionView <<Vue component>> <<Observer>> {
+        - selectedSeatIds: number[]
+        + toggleSeat(seatId: number): void
+        + reserve(): void
+    }
+
+    class ReservationsView <<Vue component>> <<Observer>> {
+        + pay(reservationId: number): void
+        + cancel(reservationId: number): void
+    }
+
+    class AdminReservationsView <<Vue component>> <<Observer>> {
+        + cancel(reservationId: number): void
+    }
+
+    class ScreeningStore <<Pinia store>> <<Subject>> {
+        + screenings: ScreeningDto[]
+        + seats: SeatDto[]
+        + loadScreenings(): Promise<void>
+        + loadSeats(screeningId: number): Promise<void>
+    }
+
+    class ReservationStore <<Pinia store>> <<Subject>> {
+        + reservations: ReservationDto[]
+        + loadMine(): Promise<void>
+        + loadAll(): Promise<void>
+        + create(request: CreateReservationRequestDto): Promise<ReservationDto>
+        + pay(reservationId: number): Promise<void>
+        + cancel(reservationId: number): Promise<void>
+    }
+
+    class CinemaApiClient <<Proxy>> {
+        - baseUrl: string
+        + listScreenings(): Promise<ScreeningDto[]>
+        + getSeats(screeningId: number): Promise<SeatDto[]>
+        + createReservation(request: CreateReservationRequestDto): Promise<ReservationDto>
+        + confirmReservation(id: number): Promise<ReservationDto>
+        + cancelReservation(id: number): Promise<void>
+        + listReservations(): Promise<ReservationDto[]>
+        + listAllReservations(): Promise<ReservationDto[]>
+    }
+
+    class HttpClient <<fetch wrapper>> {
+        - authToken: string
+        + get<T>(url: string): Promise<T>
+        + post<T>(url: string, body: unknown): Promise<T>
+        + delete(url: string): Promise<void>
+    }
+}
+
+
+package "API Contract : Data Transfer Objects (JSON)" as shared {
+
+    class CreateReservationRequestDto <<record>> {
+        + screeningId: Long
+        + seatIds: List<Long>
+    }
+
+    class ReservationDto <<record>> {
+        + id: Long
+        + screeningId: Long
+        + seatIds: List<Long>
+        + status: ReservationStatus
+        + expiresAt: LocalDateTime
+    }
+
+    class ScreeningDto <<record>> {
+        + id: Long
+        + movie: MovieDto
+        + roomId: Long
+        + time: LocalDateTime
+        + price: BigDecimal
+    }
+
+    class MovieDto <<record>> {
+        + id: Long
+        + name: String
+        + director: String
+        + duration: Long
+    }
+
+    class SeatDto <<record>> {
+        + id: Long
+        + status: SeatStatus
+    }
+
+    enum SeatStatus {
+        FREE
+        PENDING
+        RESERVED
+    }
+}
+
+
+package "cinema : Controller Layer (Spring Web)" as controllers {
+
+    class ScreeningController <<@RestController>> {
+        + listScreenings(): List<ScreeningDto>
+        + getSeats(screeningId: Long): List<SeatDto>
+    }
+
+    class ReservationController <<@RestController>> {
+        + create(request: CreateReservationRequestDto, user: User): ReservationDto
+        + listReservations(user: User): List<ReservationDto>
+        + confirm(id: Long, user: User): ReservationDto
+        + cancel(id: Long, user: User): void
+    }
+
+    class AdminReservationController <<@RestController>> {
+        + listAll(): List<ReservationDto>
+    }
+
+    class ApiExceptionHandler <<@RestControllerAdvice>> {
+        + notFound(e: ResourceNotFoundException): ProblemDetail
+        + conflict(e: IllegalStateException): ProblemDetail
+        + paymentFailed(e: PaymentFailedException): ProblemDetail
+    }
+}
+
+
+package "cinema : Service Layer" as services {
+
+    class ScreeningService <<@Service>> {
+        + listScreenings(): List<ScreeningDto>
+        + getSeats(screeningId: Long): List<SeatDto>
+    }
+
+    class ReservationService <<@Service>> {
+        + {static} HOLD_DURATION: Duration = 5 min
+        + create(request: CreateReservationRequestDto, user: User): ReservationDto
+        + listReservations(user: User): List<ReservationDto>
+        + listAll(): List<ReservationDto>
+        + confirm(id: Long): ReservationDto
+        + cancel(id: Long): void
+    }
+
+    class ReservationMapper <<@Component>> {
+        + toDto(reservation: Reservation): ReservationDto
+    }
+
+    class ScreeningMapper <<@Component>> {
+        + toDto(screening: Screening): ScreeningDto
+    }
+}
+
+
+package "cinema : Payment Integration" as payment {
+
+    interface PaymentGateway <<Target>> {
+        + processPayment(payment: Payment): boolean
+    }
+
+    class ExternalPaymentGatewayAdapter <<Adapter>> {
+        + processPayment(payment: Payment): boolean
+    }
+
+    class ExternalPaymentApi <<external>> {
+        + charge(amount: BigDecimal, currency: String): ChargeResult
+    }
+}
+
+
+package "cinema : Persistence Layer (Spring Data JPA, SQLite)" as persistence {
+
+    interface "JpaRepository<T, ID>" as JpaRepository <<Spring Data>> {
+        + findById(id: ID): Optional<T>
+        + findAll(): List<T>
+        + save(entity: T): T
+        + delete(entity: T): void
+    }
+
+    interface ScreeningRepository {
+        + findAllByOrderByTimeAsc(): List<Screening>
+    }
+
+    interface SeatRepository {
+        + findByScreeningId(screeningId: Long): List<Seat>
+    }
+
+    interface ReservationRepository {
+        + findByUser(user: User): List<Reservation>
+        + findActiveByScreeningId(screeningId: Long, cutoff: LocalDateTime): List<Reservation>
+        + isAnySeatUnavailable(screeningId: Long, seatIds: List<Long>, cutoff: LocalDateTime): boolean
+        + findExpiredPending(cutoff: LocalDateTime): List<Reservation>
+        + acquireWriteLock(): void
+    }
+
+    interface PaymentRepository
+}
+
+
+package "cinema : Domain Model (JPA Entities)" as domain {
+
+    class User <<@Entity>> {
+        - id: Long
+        - firstName: String
+        - lastName: String
+        - email: String
+        - age: Integer
+        - role: Role
+    }
+
+    enum Role {
+        USER
+        ADMIN
+    }
+
+    class Movie <<@Entity>> {
+        - id: Long
+        - name: String
+        - director: String
+        - duration: Long
+    }
+
+    class Screening <<@Entity>> {
+        - id: Long
+        - time: LocalDateTime
+        - price: BigDecimal
+    }
+
+    class Room <<@Entity>> {
+        - id: Long
+    }
+
+    class Seat <<@Entity>> {
+        - id: Long
+    }
+
+    class Reservation <<@Entity>> <<Context>> {
+        - id: Long
+        - createdAt: LocalDateTime
+        - status: ReservationStatus
+        - seats: List<Seat>
+        - state: ReservationState <<@Transient>>
+        + confirm(): void
+        + cancel(): void
+        + isExpired(now: LocalDateTime): boolean
+        ~ setState(state: ReservationState): void
+    }
+
+    interface ReservationState <<State>> {
+        + confirm(reservation: Reservation): void
+        + cancel(reservation: Reservation): void
+    }
+
+    class PendingState <<ConcreteState>> {
+        + confirm(reservation: Reservation): void
+        + cancel(reservation: Reservation): void
+    }
+
+    class ReservedState <<ConcreteState>> {
+        + confirm(reservation: Reservation): void
+        + cancel(reservation: Reservation): void
+    }
+
+    enum ReservationStatus {
+        PENDING
+        RESERVED
+    }
+
+    class Payment <<@Entity>> {
+        - id: Long
+        - amount: BigDecimal
+        - currency: String = "CZK"
+        - status: PaymentStatus
+        - createdAt: LocalDateTime
+    }
+
+    enum PaymentStatus {
+        PENDING
+        COMPLETED
+    }
+}
+
+
+App --> Router
+Router ..> ScreeningsView : /screenings
+Router ..> SeatSelectionView : /screenings/:id/seats
+Router ..> ReservationsView : /reservations
+Router ..> AdminReservationsView : /admin/reservations
+
+ScreeningsView --> ScreeningStore : observes
+SeatSelectionView --> ScreeningStore : observes
+SeatSelectionView --> ReservationStore
+ReservationsView --> ReservationStore : observes
+AdminReservationsView --> ReservationStore : observes
+
+ScreeningStore --> CinemaApiClient
+ReservationStore --> CinemaApiClient
+
+CinemaApiClient --> HttpClient
+CinemaApiClient ..> CreateReservationRequestDto
+CinemaApiClient ..> ReservationDto
+CinemaApiClient ..> ScreeningDto
+CinemaApiClient ..> SeatDto
+
+ScreeningDto --> MovieDto
+SeatDto --> SeatStatus
+
+
+HttpClient ..> ScreeningController
+HttpClient ..> ReservationController : REST API\nHTTP / JSON
+HttpClient ..> AdminReservationController
+
+
+ScreeningController --> ScreeningService
+ReservationController --> ReservationService
+AdminReservationController --> ReservationService
+
+ScreeningService --> ScreeningRepository
+ScreeningService --> SeatRepository
+ScreeningService --> ReservationRepository
+ScreeningService --> ScreeningMapper
+
+ReservationService --> ReservationRepository
+ReservationService --> ScreeningRepository
+ReservationService --> SeatRepository
+ReservationService --> PaymentRepository
+ReservationService --> PaymentGateway
+ReservationService --> ReservationMapper
+
+PaymentGateway <|.. ExternalPaymentGatewayAdapter
+ExternalPaymentGatewayAdapter --> ExternalPaymentApi
+
+JpaRepository <|-- ScreeningRepository : <<bind>> T = Screening, ID = Long
+JpaRepository <|-- SeatRepository : <<bind>> T = Seat, ID = Long
+JpaRepository <|-- ReservationRepository : <<bind>> T = Reservation, ID = Long
+JpaRepository <|-- PaymentRepository : <<bind>> T = Payment, ID = Long
+
+ScreeningRepository ..> Screening
+SeatRepository ..> Seat
+ReservationRepository ..> Reservation
+PaymentRepository ..> Payment
+
+ReservationService ..> Reservation : <<create>>
+ReservationService ..> Payment : <<create>>
+ReservationController ..> User
+PaymentGateway ..> Payment
+
+ReservationMapper ..> Reservation
+ReservationMapper ..> ReservationDto : <<create>>
+ScreeningMapper ..> Screening
+ScreeningMapper ..> ScreeningDto : <<create>>
+
+
+User "1" -- "0..*" Reservation : reservations
+User --> Role
+Movie "1" -- "0..*" Screening : screenings
+Room "1" -- "0..*" Screening : screenings
+Room "1" *-- "1..*" Seat : seats
+Screening "1" -- "0..*" Reservation : reservations
+Reservation "0..*" -- "1..*" Seat : seats
+Reservation "1" -- "0..1" Payment : payment
+Reservation --> ReservationStatus
+Payment --> PaymentStatus
+
+Reservation --> "1" ReservationState : current state
+ReservationState <|.. PendingState
+ReservationState <|.. ReservedState
+PendingState ..> ReservedState : confirm()
+
+
+note right of CinemaApiClient
+    Remote proxy for the server REST API.
+    HttpClient adds the authentication
+    token to every request; the user is
+    never identified by a request value.
+end note
+
+note top of shared
+    Server: Java records (shared module).
+    Web client: equivalent TypeScript
+    interfaces with the same JSON shape.
+end note
+
+note right of Router
+    Admin routes are shown only to
+    users with the ADMIN role;
+    the server enforces it anyway.
+end note
+
+
+@enduml

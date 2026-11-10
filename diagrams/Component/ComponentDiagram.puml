@@ -1,0 +1,109 @@
+@startuml ComponentDiagram
+
+title Cinema Reservation - Component Diagram
+
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam nodesep 50
+skinparam ranksep 60
+
+actor User
+actor Admin
+
+
+component "Web Client" <<Vue 3 SPA>> as Web {
+    component "Views\n(Vue components)" as Views
+    component "Router\n(vue-router)" as Router
+    component "State Store\n(Pinia)" as Store
+    component "Cinema API Client" as ApiClient
+}
+
+
+component "shared.jar" <<library>> as Shared
+
+
+interface "Screenings API\n/screenings" as IScreenings
+interface "Reservations API\n/reservations" as IReservations
+interface "Admin API\n/admin/reservations" as IAdmin
+
+component "cinema.jar" <<Spring Boot application>> as Server {
+    component "Screening Management" as ScreeningMgmt
+    component "Reservation Management" as ReservationMgmt
+    component "Payment Integration" as PaymentIntegration
+    component "Persistence\n(Spring Data JPA)" as Persistence
+
+    interface "PaymentGateway" as IPaymentGateway
+    interface "Repositories" as IRepositories
+}
+
+
+interface "JDBC" as IJdbc
+database "cinema.db" <<SQLite>> as Db
+
+interface "Payment API" as IPaymentApi
+component "Payment Gateway" <<external system>> as ExternalGateway
+
+
+User --> Views : uses (web browser)
+Admin --> Views : uses (web browser)
+
+Router --> Views
+Views --> Store
+Store --> ApiClient
+
+ApiClient ..> IScreenings : HTTP / JSON
+ApiClient ..> IReservations : HTTP / JSON
+ApiClient ..> IAdmin : HTTP / JSON
+
+IScreenings -- ScreeningMgmt
+IReservations -- ReservationMgmt
+IAdmin -- ReservationMgmt
+
+ReservationMgmt ..> IPaymentGateway
+IPaymentGateway -- PaymentIntegration
+
+ScreeningMgmt ..> IRepositories
+ReservationMgmt ..> IRepositories
+IRepositories -- Persistence
+
+Persistence ..> IJdbc
+IJdbc -- Db
+
+PaymentIntegration ..> IPaymentApi : HTTPS
+IPaymentApi -- ExternalGateway
+
+Server ..> Shared : <<use>> DTOs
+
+
+note right of Store
+    Holds screenings, seats and
+    reservations; views observe
+    the store and re-render
+    when its state changes.
+end note
+
+note right of ApiClient
+    Sends the authentication token
+    with every request. DTOs are
+    TypeScript interfaces matching
+    the JSON of the REST API.
+end note
+
+note right of ReservationMgmt
+    Creates, confirms (pays) and
+    cancels reservations. Holds seats
+    for 5 minutes and prevents
+    double booking.
+end note
+
+note right of PaymentIntegration
+    Adapter between the system
+    and the external payment gateway.
+end note
+
+note right of Shared
+    DTOs and enums of the
+    REST API (server side).
+end note
+
+@enduml

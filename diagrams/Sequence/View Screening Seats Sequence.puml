@@ -20,12 +20,12 @@ note right of ScreeningService
 
     **SeatStatus**
     --
-    AVAILABLE - Green (free)
+    FREE - Green
     PENDING - Yellow (temporarily held)
     RESERVED - Red (booked)
 
     Expired PENDING reservations
-    are treated as AVAILABLE.
+    are treated as FREE.
 end note
 
 User -> UI: Select screening
@@ -42,10 +42,10 @@ activate ScreeningRepository
 ScreeningRepository -> DB: SELECT screening
 DB --> ScreeningRepository: Screening
 
-ScreeningRepository --> ScreeningService: Screening (hallId)
+ScreeningRepository --> ScreeningService: Screening (roomId)
 deactivate ScreeningRepository
 
-ScreeningService -> SeatRepository: findByHallId(hallId)
+ScreeningService -> SeatRepository: findByRoomId(roomId)
 activate SeatRepository
 
 SeatRepository -> DB: SELECT seats
@@ -71,15 +71,15 @@ deactivate ScreeningService
 ScreeningController --> UI: 200 OK\nList<SeatDto>
 deactivate ScreeningController
 
-UI -> UI: Render seating layout\nAVAILABLE = green\nPENDING = yellow\nRESERVED = red
+UI -> UI: Render seating layout\nFREE = green\nPENDING = yellow\nRESERVED = red
 
 note right of UI
-    Only AVAILABLE seats are clickable.
+    Only FREE seats are clickable.
 
     PENDING and RESERVED seats
     are displayed but disabled.
 end note
 
-UI --> User: Display seating layout\nwith selectable AVAILABLE seats
+UI --> User: Display seating layout\nwith selectable FREE seats
 
 @enduml

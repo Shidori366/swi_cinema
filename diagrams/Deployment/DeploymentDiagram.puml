@@ -1,0 +1,76 @@
+@startuml DeploymentDiagram
+
+title Cinema Reservation - Deployment Diagram
+
+skinparam shadowing false
+skinparam nodesep 60
+skinparam ranksep 70
+
+
+node "User Device" <<device>> as UserPc {
+    node "Web Browser" <<execution environment>> as UserBrowser {
+        artifact "Web Client\n(Vue SPA)" as UserWeb
+    }
+}
+
+node "Admin Device" <<device>> as AdminPc {
+    node "Web Browser" <<execution environment>> as AdminBrowser {
+        artifact "Web Client\n(Vue SPA)" as AdminWeb
+    }
+}
+
+
+node "Internet / LAN" <<network>> as Network
+
+
+node "Cinema Server" <<application server>> as ServerNode {
+    node "JRE 25\nSpring Boot (embedded Tomcat, port 8080)" <<execution environment>> as ServerJre {
+        artifact "cinema.jar" as ServerJar {
+            component "Screening Management"
+            component "Reservation Management"
+            component "Payment Integration"
+            component "Persistence"
+            artifact "web client bundle\n(index.html, JS, CSS)" as WebBundle
+        }
+        artifact "shared.jar" as ServerShared
+    }
+
+    database "cinema.db" <<SQLite file>> as Db
+}
+
+
+node "Payment Gateway" <<external system>> as PaymentGateway
+
+
+UserPc -- Network : HTTPS\n(static files, REST / JSON)
+AdminPc -- Network : HTTPS\n(static files, REST / JSON)
+Network -- ServerNode : HTTPS\n(static files, REST / JSON)
+
+ServerJar -- Db : JDBC (sqlite-jdbc)
+ServerNode -- PaymentGateway : HTTPS / REST
+
+
+note bottom of WebBundle
+    Built Vue application, served
+    by Spring Boot as static files
+    and downloaded by the browser.
+end note
+
+note bottom of Db
+    Embedded SQLite database stored
+    as a file on the server; accessed
+    only by cinema.jar.
+end note
+
+note bottom of PaymentGateway
+    Third-party service,
+    not part of this system.
+end note
+
+note top of AdminPc
+    Admin uses the same web client;
+    admin pages are available
+    based on the user's role.
+end note
+
+@enduml

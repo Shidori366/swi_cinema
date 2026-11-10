@@ -53,8 +53,9 @@ Use cases are described in [Use case.md](Use%20case.md).
 
 ### Constraints
 
-| ID     | Requirement                                                                                                  |
-|--------|--------------------------------------------------------------------------------------------------------------|
-| NFR-09 | The system shall use a client–server architecture: a client communicates with the server through a REST API. |
-| NFR-10 | The server shall be implemented in Java with Spring Boot and shall use an SQLite database.                   |
-| NFR-11 | All prices shall be in CZK.                                                                                  |
+| ID     | Requirement                                                                                                   |
+|--------|---------------------------------------------------------------------------------------------------------------|
+| NFR-09 | The system shall use a client–server architecture: a client communicates with the server through a REST API.  |
+| NFR-10 | The server shall be implemented in Java with Spring Boot and shall use an SQLite database.                    |
+| NFR-11 | All prices shall be in CZK.                                                                                   |
+| NFR-12 | The client shall be a web application (Vue.js (typescript) single-page application) running in a web browser. |
