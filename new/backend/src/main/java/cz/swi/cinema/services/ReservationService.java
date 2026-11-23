@@ -32,7 +32,10 @@ public class ReservationService {
             Seat seat = seatRepository.findById(seatId)
                     .orElseThrow(() -> new cz.swi.cinema.exceptions.ResourceNotFoundException("Seat not found"));
             
-            if (seat.getStatus() == cz.swi.cinema.enums.SeatStatus.RESERVED) {
+            boolean takenForScreening = reservationRepository.findBySeatId(seatId).stream()
+                    .anyMatch(r -> r.getScreening().getId().equals(screening.getId())
+                            && r.getReservationStatus() != ReservationStatus.CANCELLED);
+            if (takenForScreening) {
                 throw new RuntimeException("Seat is already reserved");
             }
             

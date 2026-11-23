@@ -47,34 +47,40 @@ public class ScreeningService {
     public List<SeatDto> getSeatsForScreening(Long screeningId) {
         Screening s = screeningRepository.findById(screeningId)
             .orElseThrow(() -> new RuntimeException("Screening not found"));
-        
-        return seatRepository.findByRoomId(s.getRoom().getId()).stream().map(seat -> {
-            SeatDto dto = new SeatDto();
-            dto.setId(seat.getId());
-            dto.setStatus(seat.getStatus().name());
-            dto.setSeatNumber(String.valueOf(seat.getId()));
-            return dto;
-        }).collect(Collectors.toList());
+
+        return toSeatDtos(roomSeatsOrdered(s.getRoom().getId()), seat -> true);
     }
 
     public List<SeatDto> getAvailableSeatsForScreening(Long screeningId) {
         Screening s = screeningRepository.findById(screeningId)
             .orElseThrow(() -> new RuntimeException("Screening not found"));
-        
-        List<Seat> allSeats = seatRepository.findByRoomId(s.getRoom().getId());
-        
-        // A seat is available if it's not part of any non-cancelled reservation
-        List<Seat> availableSeats = allSeats.stream()
-            .filter(seat -> reservationRepository.findBySeatId(seat.getId()).stream()
-                .noneMatch(r -> r.getReservationStatus() != cz.swi.cinema.enums.ReservationStatus.CANCELLED))
-            .toList();
 
-        return availableSeats.stream().map(seat -> {
+        // A seat is available if it's not part of any non-cancelled reservation for THIS screening
+        return toSeatDtos(roomSeatsOrdered(s.getRoom().getId()), seat ->
+            reservationRepository.findBySeatId(seat.getId()).stream()
+                .noneMatch(r -> r.getScreening().getId().equals(screeningId)
+                    && r.getReservationStatus() != cz.swi.cinema.enums.ReservationStatus.CANCELLED));
+    }
+
+    private List<Seat> roomSeatsOrdered(Long roomId) {
+        List<Seat> seats = new java.util.ArrayList<>(seatRepository.findByRoomId(roomId));
+        seats.sort(java.util.Comparator.comparing(Seat::getId));
+        return seats;
+    }
+
+    /** Maps seats to DTOs with a human label like "A1", "B7" (rows of SEATS_PER_ROW, ordered by id). */
+    private List<SeatDto> toSeatDtos(List<Seat> orderedRoomSeats, java.util.function.Predicate<Seat> include) {
+        int perRow = cz.swi.cinema.DataInitializer.SEATS_PER_ROW;
+        List<SeatDto> result = new java.util.ArrayList<>();
+        for (int i = 0; i < orderedRoomSeats.size(); i++) {
+            Seat seat = orderedRoomSeats.get(i);
+            if (!include.test(seat)) continue;
             SeatDto dto = new SeatDto();
             dto.setId(seat.getId());
             dto.setStatus(seat.getStatus().name());
-            dto.setSeatNumber(String.valueOf(seat.getId()));
-            return dto;
-        }).collect(Collectors.toList());
+            dto.setSeatNumber("" + (char) ('A' + i / perRow) + (i % perRow + 1));
+            result.add(dto);
+        }
+        return result;
     }
 }
