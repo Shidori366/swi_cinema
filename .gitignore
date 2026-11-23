@@ -1,11 +1,39 @@
-HELP.md
+# General
+.DS_Store
+*.log
+.cache/
+
+# Java / Maven
 target/
-.mvn/wrapper/maven-wrapper.jar
+*.class
+*.war
+*.jar
+*.ear
+*.jar.xz
+*.war.xz
+*.ear.xz
+*.zip
+*.tar.gz
+*.pb
 !**/src/main/**/target/
 !**/src/test/**/target/
-cinema/db
 
-### STS ###
+# Spring Boot
+.mtls-certs/
+
+# Node / Vite
+node_modules/
+dist/
+.env
+.env.*
+.eslintcache
+.styleguidestring.json
+
+# IDEs and OS
+.idea/
+*.iws
+*.iml
+*.ipr
 .apt_generated
 .classpath
 .factorypath
@@ -13,14 +41,6 @@ cinema/db
 .settings
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,6 +49,8 @@ cinema/db
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
-### VS Code ###
 .vscode/
+
+# Project Specific
+cinema/db
+.mvn/wrapper/maven-wrapper.jar
