@@ -47,9 +47,10 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const screenings = ref([])
 const currency = ref('CZK')
+const baseURL = import.meta.env.VITE_API_BASE_URL
 
 onMounted(async () => {
-  const response = await axios.get('http://localhost:8080/api/screenings')
+  const response = await axios.get(baseURL + '/api/screenings')
   screenings.value = response.data
 })
 

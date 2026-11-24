@@ -70,14 +70,14 @@ import axios from 'axios'
 const reservations = ref([])
 
 onMounted(async () => {
-  const response = await axios.get('http://localhost:8080/api/reservations')
+  const response = await axios.get(import.meta.env.VITE_API_BASE_URL +'/api/reservations')
   reservations.value = response.data
 })
 
 const cancelReservation = async (id) => {
   try {
-    await axios.post(`http://localhost:8080/api/reservations/${id}/cancel`)
-    const response = await axios.get('http://localhost:8080/api/reservations')
+    await axios.post(import.meta.env.VITE_API_BASE_URL + `/api/reservations/${id}/cancel`)
+    const response = await axios.get(import.meta.env.VITE_API_BASE_URL + '/api/reservations')
     reservations.value = response.data
   } catch (err) {
     alert('Error cancelling reservation')

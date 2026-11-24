@@ -57,14 +57,14 @@ import axios from 'axios'
 const reservations = ref([])
 
 onMounted(async () => {
-  const response = await axios.get('http://localhost:8080/api/reservations/user/1')
+  const response = await axios.get(import.meta.env.VITE_API_BASE_URL + '/api/reservations/user/1')
   reservations.value = response.data
 })
 
 const cancelReservation = async (id) => {
   try {
-    await axios.post(`http://localhost:8080/api/reservations/${id}/cancel`)
-    const response = await axios.get('http://localhost:8080/api/reservations/user/1')
+    await axios.post(import.meta.env.VITE_API_BASE_URL + `/api/reservations/${id}/cancel`)
+    const response = await axios.get(import.meta.env.VITE_API_BASE_URL + '/api/reservations/user/1')
     reservations.value = response.data
   } catch (err) {
     alert('Error cancelling reservation')
@@ -73,8 +73,8 @@ const cancelReservation = async (id) => {
 
 const payReservation = async (id) => {
   try {
-    await axios.post(`http://localhost:8080/api/reservations/${id}/pay`)
-    const response = await axios.get('http://localhost:8080/api/reservations/user/1')
+    await axios.post(import.meta.env.VITE_API_BASE_URL + `/api/reservations/${id}/pay`)
+    const response = await axios.get(import.meta.env.VITE_API_BASE_URL + '/api/reservations/user/1')
     reservations.value = response.data
     alert('Payment Successful')
   } catch (err) {

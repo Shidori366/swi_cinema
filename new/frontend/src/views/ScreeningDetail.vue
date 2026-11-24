@@ -93,15 +93,15 @@ const screening = ref({
 onMounted(async () => {
   try {
     loading.value = true
-    const screeningRes = await axios.get(`http://localhost:8080/api/screenings/${screeningId}`)
+    const screeningRes = await axios.get(import.meta.env.VITE_API_BASE_URL + `/api/screenings/${screeningId}`)
     console.log('Screening Data:', screeningRes.data)
     screening.value = screeningRes.data
 
-    const seatsRes = await axios.get(`http://localhost:8080/api/screenings/${screeningId}/seats`)
+    const seatsRes = await axios.get(import.meta.env.VITE_API_BASE_URL + `/api/screenings/${screeningId}/seats`)
     console.log('Seats Data:', seatsRes.data)
     allSeats.value = seatsRes.data
 
-    const availRes = await axios.get(`http://localhost:8080/api/screenings/${screeningId}/seats/available`)
+    const availRes = await axios.get(import.meta.env.VITE_API_BASE_URL + `/api/screenings/${screeningId}/seats/available`)
     console.log('Available Seats:', availRes.data)
     availableIds.value = new Set(availRes.data.map(s => s.id))
   } catch (err) {
@@ -141,7 +141,7 @@ const submitReservation = async () => {
       userId: 1
     }
 
-    await axios.post('http://localhost:8080/api/reservations', payload)
+    await axios.post(import.meta.env.VITE_API_BASE_URL + '/api/reservations', payload)
     router.push('/reservations')
   } catch (err) {
     alert('Error creating reservation')
